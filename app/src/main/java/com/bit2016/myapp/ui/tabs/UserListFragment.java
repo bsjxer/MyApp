@@ -40,6 +40,7 @@ public class UserListFragment extends ListFragment {
     private class FetchUserListTask extends SafeAsyncTask<List<User>> {
         @Override
         public List<User> call() throws Exception {
+            getActivity().findViewById( R.id.progress ).setVisibility( View.VISIBLE );
             return userService.fetchUserList();
         }
 
@@ -55,6 +56,7 @@ public class UserListFragment extends ListFragment {
             }
 
             userListArrayAdapter.add( users );
+            getActivity().findViewById( R.id.progress ).setVisibility( View.GONE );
         }
     }
 }

@@ -1,16 +1,27 @@
 package com.bit2016.myapp.core.service;
 
-import com.bit2016.myapp.core.domain.User;
+import android.util.Log;
 
+import com.bit2016.adroid.JSONResult;
+import com.bit2016.myapp.core.domain.User;
+import com.github.kevinsawicki.http.HttpRequest;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Pack200;
 
 /**
  * Created by kickscar on 2016-12-01.
  */
 
 public class UserService {
-    public List<User> fetchUserList() {
+
+    public List<User> fetchMockUserList() {
 
         List<User> list = new ArrayList<User>();
 
@@ -26,4 +37,44 @@ public class UserService {
 
         return list;
     }
+
+    public List<User> fetchUserList() {
+
+        String url = "http://192.168.0.2:8088/myapp-api/api/user/list";
+        HttpRequest request = HttpRequest.get( url );
+
+        request.contentType( HttpRequest.CONTENT_TYPE_JSON );
+        request.accept( HttpRequest.CONTENT_TYPE_JSON );
+        request.connectTimeout( 1000 );
+        request.readTimeout( 30000 );
+
+        int responseCode = request.code();
+
+        if( responseCode != HttpURLConnection.HTTP_OK ) {
+            Log.e( "UserService", "fetchUserList() error : Not 200 OK" );
+            return null;
+        }
+
+        JSONResultUserList jsonResult = fromJSON( request, JSONResultUserList.class );
+        return jsonResult.getData();
+    }
+
+    protected <V> V fromJSON( HttpRequest request, Class<V> target ) {
+        V v = null;
+        try {
+            Gson gson = new GsonBuilder().create();
+
+            Reader reader = request.bufferedReader();
+            v = gson.fromJson(reader, target);
+            reader.close();
+        } catch( Exception ex ) {
+            Log.e( "UserService", "fromJSON error : " + ex );
+            throw new RuntimeException( ex );
+        }
+
+        return v;
+    }
+
+    private class JSONResultUserList extends JSONResult<List<User>>{};
+
 }
